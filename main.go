@@ -7,11 +7,12 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var inputFile = "./access.log"                    //nginx log file
 var outputFile = "countries.json"                 //output json
-var databaseLoc = "dbip-country-lite-2024-04.csv" //CSV IP database. Format: 'start_ip,end_ip,country_code'
+var databaseLoc = "dbip-country-lite-2024-04.csv" //CSV ordered IP database. Format: 'start_ip,end_ip,country_code'
 
 type ipDatabase struct {
 	arr   []ipRange
@@ -21,6 +22,11 @@ type ipRange struct {
 	begin   uint32
 	end     uint32
 	country string
+}
+
+type dataStruct struct{
+	Timestamp int64
+	Countries map[string]int
 }
 
 func ipToInt(ip string) uint32 {
@@ -91,8 +97,8 @@ func parseDatabase() (ipDatabase, error) {
 	return ipDatabase{tempArr, count}, nil
 }
 
-func exportJSON(countries map[string]int) {
-	json, _ := json.Marshal(countries)
+func exportJSON(data dataStruct) {
+	json, _ := json.Marshal(data)
 	file, err := os.Create(outputFile)
 	if err != nil {
 		fmt.Println("Error: ", err)
@@ -104,6 +110,11 @@ func exportJSON(countries map[string]int) {
 }
 
 func main() {
+	var finalData dataStruct
+
+	finalData.Timestamp = time.Now().Unix()
+
+	fmt.Println("Script ran at", time.Now())
 
 	//parse database
 	database, err := parseDatabase()
@@ -127,6 +138,7 @@ func main() {
 
 	//parse log file and find country
 	var count int
+
 	countries := make(map[string]int)
 	for scanner.Scan() {
 		ip := strings.Fields(scanner.Text())[0]
@@ -140,7 +152,9 @@ func main() {
 		countries[country]++
 	}
 
-	exportJSON(countries)
+	finalData.Countries = countries
+
+	exportJSON(finalData)
 
 	fmt.Println("Req. processed: ", count)
 }
