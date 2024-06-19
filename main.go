@@ -47,7 +47,7 @@ func ipToInt(ip string) uint32 {
 func findCountry(ip string, database ipDatabase) string {
 	ipInt := ipToInt(ip)
 
-	//essentially binary search
+	//binary search
 	var l int = 0
 	var r int = database.count - 1
 	for l <= r {
@@ -60,7 +60,6 @@ func findCountry(ip string, database ipDatabase) string {
 			l = m + 1
 		}
 	}
-
 	return "Unknown"
 }
 
