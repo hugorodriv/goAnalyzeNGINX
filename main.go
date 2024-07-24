@@ -10,9 +10,11 @@ import (
 	"time"
 )
 
-var inputFile = "./access.log"                    //nginx log file
-var outputFile = "countries.json"                 //output json
-var databaseLoc = "dbip-country-lite-2024-04.csv" //CSV ordered IP database. Format: 'start_ip,end_ip,country_code'
+var (
+	inputFile   = "./access.log"                  // nginx log file
+	outputFile  = "countries.json"                // output json
+	databaseLoc = "dbip-country-lite-2024-04.csv" // CSV ordered IP database. Format: 'start_ip,end_ip,country_code'
+)
 
 type ipDatabase struct {
 	arr   []ipRange
@@ -24,7 +26,7 @@ type ipRange struct {
 	country string
 }
 
-type dataStruct struct{
+type dataStruct struct {
 	Timestamp int64
 	Countries map[string]int
 }
@@ -47,7 +49,7 @@ func ipToInt(ip string) uint32 {
 func findCountry(ip string, database ipDatabase) string {
 	ipInt := ipToInt(ip)
 
-	//binary search
+	// binary search
 	var l int = 0
 	var r int = database.count - 1
 	for l <= r {
@@ -115,7 +117,7 @@ func main() {
 
 	fmt.Println("Script ran at", time.Now())
 
-	//parse database
+	// parse database
 	database, err := parseDatabase()
 	_ = database
 	if err != nil {
@@ -123,7 +125,7 @@ func main() {
 		return
 	}
 
-	//open log and create scanner
+	// open log and create scanner
 	file, err := os.Open(inputFile)
 	if err != nil {
 		fmt.Println("Error: ", err)
@@ -135,7 +137,7 @@ func main() {
 		fmt.Println("Error: ", err)
 	}
 
-	//parse log file and find country
+	// parse log file and find country
 	var count int
 
 	countries := make(map[string]int)
