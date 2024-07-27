@@ -1,3 +1,3 @@
-module main
+module historic
 
 go 1.22.1
