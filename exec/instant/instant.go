@@ -6,18 +6,19 @@ package main
 
 import (
 	"bufio"
+	"goAnalyzeNGINX/shared"
 	"log"
 	"os"
 	"os/exec"
 )
 
 var (
-	inputFile   = "./fakeLogs.log"                       // nginx log file
+	inputFile   = "./data/fakeLogs.log"                  // nginx log file
 	outputFile  = "./data/countries.json"                // output json
 	databaseLoc = "./data/dbip-country-lite-2024-04.csv" // CSV ordered IP database. Format: 'start_ip,end_ip,country_code'
 )
 
-func main() {
+func listen() {
 	cmd := exec.Command("tail", "--retry", "--follow", inputFile)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -41,4 +42,9 @@ func main() {
 		println(os.Stderr, "Error waiting for Cmd", err)
 		return
 	}
+}
+
+func main() {
+	println(shared.IpToInt("127.0.0.1"))
+	// listen()
 }
