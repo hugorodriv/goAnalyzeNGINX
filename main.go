@@ -11,9 +11,9 @@ import (
 )
 
 var (
-	inputFile   = "./access.log"                  // nginx log file
-	outputFile  = "countries.json"                // output json
-	databaseLoc = "dbip-country-lite-2024-04.csv" // CSV ordered IP database. Format: 'start_ip,end_ip,country_code'
+	inputFile   = "./data/access.log"                    // nginx log file
+	outputFile  = "./data/countries.json"                // output json
+	databaseLoc = "./data/dbip-country-lite-2024-04.csv" // CSV ordered IP database. Format: 'start_ip,end_ip,country_code'
 )
 
 type ipDatabase struct {
@@ -50,8 +50,8 @@ func findCountry(ip string, database ipDatabase) string {
 	ipInt := ipToInt(ip)
 
 	// binary search
-	var l int = 0
-	var r int = database.count - 1
+	l := 0
+	r := database.count - 1
 	for l <= r {
 		m := l + (r-l)/2
 		if database.arr[m].begin <= ipInt && database.arr[m].end >= ipInt {
@@ -113,6 +113,7 @@ func exportJSON(data dataStruct) {
 func main() {
 	var finalData dataStruct
 
+	execTime := time.Now().UnixMilli()
 	finalData.Timestamp = time.Now().Unix()
 
 	fmt.Println("Script ran at", time.Now())
@@ -157,5 +158,5 @@ func main() {
 
 	exportJSON(finalData)
 
-	fmt.Println("Req. processed: ", count)
+	fmt.Println(count, "requests processed in", (time.Now().UnixMilli() - execTime), "ms")
 }

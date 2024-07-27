@@ -2,8 +2,4 @@
 !/**/
 !*.*
 
-*.json
-*.log
-*.csv
-convert_database_alpha3.py
-*.sh
+/data/
