@@ -19,6 +19,9 @@ import (
 var inputFile = "./data/fakeLogs.log" // nginx log file
 
 func listen(database shared.IpDatabase) {
+	// SSE Config
+
+	// Parse File
 	cmd := exec.Command("tail", "--lines", "1", "--retry", "--follow", inputFile)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -49,7 +52,7 @@ func processIP(ip string, database shared.IpDatabase) {
 	country := shared.FindCountry(ip, database)
 	fmt.Println(country)
 	http.HandleFunc("/events", eventsHandler)
-	http.ListenAndServe(":8080", nil)
+	// http.ListenAndServe(":8080", nil)
 }
 
 func eventsHandler(w http.ResponseWriter, r *http.Request) {
@@ -73,6 +76,7 @@ func eventsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	// Config SSE
 	// println(shared.IpToInt("127.0.0.1"))
 	database, err := shared.ParseDatabase()
 	if err != nil {
