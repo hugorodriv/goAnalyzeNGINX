@@ -6,20 +6,20 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"goAnalyzeNGINX/shared"
 	"log"
+	"net/http"
 	"os"
 	"os/exec"
+	"strings"
+	"time"
 )
 
-var (
-	inputFile   = "./data/fakeLogs.log"                  // nginx log file
-	outputFile  = "./data/countries.json"                // output json
-	databaseLoc = "./data/dbip-country-lite-2024-04.csv" // CSV ordered IP database. Format: 'start_ip,end_ip,country_code'
-)
+var inputFile = "./data/fakeLogs.log" // nginx log file
 
-func listen() {
-	cmd := exec.Command("tail", "--retry", "--follow", inputFile)
+func listen(database shared.IpDatabase) {
+	cmd := exec.Command("tail", "--lines", "1", "--retry", "--follow", inputFile)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		log.Fatal(err)
@@ -27,7 +27,8 @@ func listen() {
 	scanner := bufio.NewScanner(stdout)
 	go func() {
 		for scanner.Scan() {
-			println(scanner.Text())
+			ip := strings.Fields(scanner.Text())[0]
+			processIP(ip, database)
 		}
 	}()
 
@@ -44,7 +45,39 @@ func listen() {
 	}
 }
 
+func processIP(ip string, database shared.IpDatabase) {
+	country := shared.FindCountry(ip, database)
+	fmt.Println(country)
+	http.HandleFunc("/events", eventsHandler)
+	http.ListenAndServe(":8080", nil)
+}
+
+func eventsHandler(w http.ResponseWriter, r *http.Request) {
+	// Set CORS headers to allow all origins. You may want to restrict this to specific origins in a production environment.
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Expose-Headers", "Content-Type")
+
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+
+	for i := 0; i < 10; i++ {
+		fmt.Fprintf(w, "data: %s\n\n", fmt.Sprintf("Event %d", i))
+		time.Sleep(2 * time.Second)
+		w.(http.Flusher).Flush()
+	}
+
+	// Simulate closing the connection
+	closeNotify := w.(http.CloseNotifier).CloseNotify()
+	<-closeNotify
+}
+
 func main() {
-	println(shared.IpToInt("127.0.0.1"))
-	// listen()
+	// println(shared.IpToInt("127.0.0.1"))
+	database, err := shared.ParseDatabase()
+	if err != nil {
+		fmt.Println("Error: ", err)
+		return
+	}
+	listen(database)
 }
