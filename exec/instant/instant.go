@@ -56,7 +56,7 @@ func listen(database shared.IpDatabase, atomicClients *atomic.Int32, w http.Resp
 			default:
 				text := scanner.Text()
 				fields := strings.Fields(text)
-				fmt.Fprintf(w, "%s\n", shared.FindCountry(fields[0], database))
+				fmt.Fprintf(w, "%s", shared.FindCountry(fields[0], database))
 				f.Flush()
 			}
 			counter++
@@ -93,7 +93,7 @@ func main() {
 		w.Header().Set("Content-Type", "text/event-stream")
 		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("Connection", "keep-alive")
-
+		w.Header().Set("Content-Encoding", "none")
 		flusher, ok := w.(http.Flusher)
 		if !ok {
 			fmt.Println(ok)
