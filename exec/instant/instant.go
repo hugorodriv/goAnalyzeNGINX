@@ -22,11 +22,6 @@ var (
 )
 
 func listen(database shared.IpDatabase, atomicClients *atomic.Int32, w http.ResponseWriter, f http.Flusher, ctx <-chan struct{}) {
-	if atomicClients.Load() > clientLimit {
-		fmt.Println("Too many clients (>", clientLimit, ")")
-		return
-	}
-
 	cmd := exec.Command("tail", "--lines", "1", "--retry", "--follow", inputFile)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -37,21 +32,19 @@ func listen(database shared.IpDatabase, atomicClients *atomic.Int32, w http.Resp
 
 	scanner := bufio.NewScanner(stdout)
 
-	// fmt.Println("Client n", atomicClients.Load())
-	atomicClients.Add(1)
-
 	go func(atomicClients *atomic.Int32) {
 		counter := 1
 		for scanner.Scan() {
 			if counter > reqLimit {
-				atomicClients.Add(-1)
 				fmt.Fprintf(w, "%s\n", "-")
 				f.Flush()
+				atomicClients.Add(-1)
 				return
 			}
 			select {
 			case <-ctx:
 				atomicClients.Add(-1)
+				fmt.Printf("Client disconnected\n")
 				return
 			default:
 				text := scanner.Text()
@@ -67,6 +60,7 @@ func listen(database shared.IpDatabase, atomicClients *atomic.Int32, w http.Resp
 	if err != nil {
 		println(os.Stderr, "Error starting Cmd", err)
 		atomicClients.Add(-1)
+		fmt.Printf("Client disconnected\n")
 		return
 	}
 
@@ -74,13 +68,13 @@ func listen(database shared.IpDatabase, atomicClients *atomic.Int32, w http.Resp
 	if err != nil {
 		println(os.Stderr, "Error waiting for Cmd", err)
 		atomicClients.Add(-1)
+		fmt.Printf("Client disconnected\n")
 		return
 	}
-	atomicClients.Add(-1)
 }
 
 func main() {
-	var clientsAtomic atomic.Int32
+	var atomicClients atomic.Int32
 	// Config SSE
 	database, err := shared.ParseDatabase()
 	if err != nil {
@@ -88,6 +82,13 @@ func main() {
 		return
 	}
 	http.HandleFunc("/events", func(w http.ResponseWriter, r *http.Request) {
+		if atomicClients.Load() > clientLimit {
+			fmt.Println("Too many clients (>", clientLimit, ")")
+			return
+		}
+		fmt.Printf("Clients: %d\n", atomicClients.Load())
+		atomicClients.Add(1)
+
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Expose-Headers", "Content-Type")
 		w.Header().Set("Content-Type", "text/event-stream")
@@ -100,7 +101,7 @@ func main() {
 		}
 
 		ctx := r.Context().Done()
-		listen(database, &clientsAtomic, w, flusher, ctx)
+		listen(database, &atomicClients, w, flusher, ctx)
 		<-r.Context().Done()
 	})
 
