@@ -81,7 +81,7 @@ func main() {
 		fmt.Println("Error: ", err)
 		return
 	}
-	http.HandleFunc("/events", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/instant_events", func(w http.ResponseWriter, r *http.Request) {
 		if atomicClients.Load() > clientLimit {
 			fmt.Println("Too many clients (>", clientLimit, ")")
 			return
