@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-var databaseLoc = "./data/dbip-country-lite-2024-04.csv"
+var databaseLoc = "./dbip-country-lite-2024-09.csv"
 
 type IpDatabase struct {
 	arr   []IpRange

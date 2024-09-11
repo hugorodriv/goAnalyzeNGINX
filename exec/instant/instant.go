@@ -18,7 +18,7 @@ import (
 var (
 	reqLimit          = 100
 	clientLimit int32 = 10
-	inputFile         = "./data/fakeLogs.log" // nginx log file
+	inputFile         = "/var/log/nginx/access.log" // nginx log file
 )
 
 func listen(database shared.IpDatabase, atomicClients *atomic.Int32, w http.ResponseWriter, f http.Flusher, ctx <-chan struct{}) {

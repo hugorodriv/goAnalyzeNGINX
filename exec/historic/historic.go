@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	inputFile  = "./data/access.log"     // nginx log file
-	outputFile = "./data/countries.json" // output json
+	inputFile  = "./access.log"     // nginx log file
+	outputFile = "./countries.json" // output json
 )
 
 type dataStruct struct {
