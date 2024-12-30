@@ -16,8 +16,7 @@ var (
 )
 
 type dataStruct struct {
-	Requests  map[string]int
-	IPs       map[string]int
+	Countries map[string][]int // first int is req per country, second int is unique visitors per country (diff IPs)
 	Timestamp int64
 }
 
@@ -63,8 +62,7 @@ func main() {
 	// parse log file and find country
 	reqCount := 0
 
-	requests_countries := make(map[string]int) // amount of requests per country
-	ips_countries := make(map[string]int)      // amount of unique visitors per country
+	requests_countries := make(map[string][]int) // amount of requests per country
 
 	// keep a map of already visited IPs for when we want to distinguish
 	// between req from each country vs visitors from each country
@@ -80,15 +78,18 @@ func main() {
 			continue
 		}
 
-		requests_countries[country]++
+		if _, exists := requests_countries[country]; !exists {
+			requests_countries[country] = []int{0, 0}
+		}
+
+		requests_countries[country][0]++
 		if !analyzed_ips[ip] {
 			analyzed_ips[ip] = true
-			ips_countries[country]++
+			requests_countries[country][1]++
 		}
 	}
 
-	finalData.Requests = requests_countries
-	finalData.IPs = ips_countries
+	finalData.Countries = requests_countries
 
 	exportJSON(finalData)
 
