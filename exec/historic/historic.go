@@ -16,7 +16,8 @@ var (
 )
 
 type dataStruct struct {
-	Countries map[string]int
+	Requests  map[string]int
+	IPs       map[string]int
 	Timestamp int64
 }
 
@@ -42,7 +43,6 @@ func main() {
 
 	// parse database
 	database, err := shared.ParseDatabase()
-	_ = database
 	if err != nil {
 		fmt.Println("Error: ", err)
 		return
@@ -61,24 +61,36 @@ func main() {
 	}
 
 	// parse log file and find country
-	var count int
+	reqCount := 0
 
-	countries := make(map[string]int)
+	requests_countries := make(map[string]int) // amount of requests per country
+	ips_countries := make(map[string]int)      // amount of unique visitors per country
+
+	// keep a map of already visited IPs for when we want to distinguish
+	// between req from each country vs visitors from each country
+	analyzed_ips := make(map[string]bool)
+
 	for scanner.Scan() {
 		ip := strings.Fields(scanner.Text())[0]
-		count++
+		reqCount++
 
 		country := shared.FindCountry(ip, database)
 
 		if country == "Unknown" {
 			continue
 		}
-		countries[country]++
+
+		requests_countries[country]++
+		if !analyzed_ips[ip] {
+			analyzed_ips[ip] = true
+			ips_countries[country]++
+		}
 	}
 
-	finalData.Countries = countries
+	finalData.Requests = requests_countries
+	finalData.IPs = ips_countries
 
 	exportJSON(finalData)
 
-	fmt.Println(count, "requests processed in", (time.Now().UnixMilli() - execTime), "ms")
+	fmt.Println(reqCount, "requests processed in", (time.Now().UnixMilli() - execTime), "ms")
 }
