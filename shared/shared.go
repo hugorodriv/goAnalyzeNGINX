@@ -15,9 +15,9 @@ type IpDatabase struct {
 	count int
 }
 type IpRange struct {
+	country string
 	begin   uint32
 	end     uint32
-	country string
 }
 
 func IpToInt(ip string) uint32 {
@@ -80,7 +80,7 @@ func ParseDatabase() (IpDatabase, error) {
 		end := IpToInt(line[1])
 		country := line[2]
 
-		tempIpR := IpRange{begin, end, country}
+		tempIpR := IpRange{country, begin, end}
 		tempArr = append(tempArr, tempIpR)
 		count++
 	}
